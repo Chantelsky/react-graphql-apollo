@@ -2,13 +2,20 @@ const { gql } = require('apollo-server');
 
 const typeDefs = gql`
   type Query {
-    # returns an array of all upcoming Launches
-    launches: [Launch]!
-    # returns a single Launch that corresponds with the id argument provided to the query
+    launches(
+      """
+      The number of results to show. Must be >= 1. Default = 20
+      """
+      pageSize: Int
+      """
+      If you add a cursor here, it will only return results _after_ this cursor
+      """
+      after: String
+    ): LaunchConnection!
     launch(id: ID!): Launch
-    #returns the details for the User thats currently logged in
     me: User
   }
+
   type Mutation {
     # if false, signup failed
     bookTrips(launchId: [ID]!): TripUpdateResponse!
@@ -25,6 +32,17 @@ const typeDefs = gql`
     success: Boolean!
     message: String
     launches: [Launch]
+  }
+
+  """
+  Simple wrapper around our list of launches that contains a cursor to the
+  last item in the list. Pass this cursor to the launches query to fetch results
+  after these.
+  """
+  type LaunchConnection {
+    cursor: String!
+    hasMore: Boolean!
+    launches: [Launch]!
   }
 
   type Launch {
